@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accessibility AI Suite</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 25px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #1e293b;
+      color: #e2e8f0;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 850px) {
+      .row { grid-template-columns: 1fr; }
+    }
+
+    label {
+      font-size: 14px;
+      color: #cbd5e1;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      background: #0b1220;
+      color: #e2e8f0;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .btn {
+      margin-top: 12px;
+      background: #22c55e;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #052e16;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn.secondary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .output {
+      white-space: pre-wrap;
+      background: #0b1220;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 120px;
+      margin-top: 10px;
+      color: #e2e8f0;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    .error {
+      color: #f87171;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .success {
+      color: #4ade80;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #94a3b8;
+      border-top: 2px solid #22c55e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🧠 Accessibility AI Suite</h1>
+    <div class="subtitle">
+      3 Operations: Image → Description | Speech → Text (+Translate) | Text → Speech (Flask API)
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab(event, 'tab-image')">🖼️ Image → Description</button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-stt')">🎙️ Speech → Text</button>
+      <button class="tab-btn" onclick="openTab(event, 'tab-tts')">🗣️ Text → Speech</button>
+    </div>
+
+    <!-- TAB 1: IMAGE -->
+    <div id="tab-image" class="card">
+      <h2>🖼️ Image → Description</h2>
+      <div class="row">
+        <div>
+          <label>Upload Image</label>
+          <input type="file" id="imageFile" accept="image/png,image/jpeg" />
+
+          <label style="margin-top: 12px;">Mode</label>
+          <select id="imageMode">
+            <option value="detailed">Detailed</option>
+            <option value="alt">Short Alt-Text</option>
+            <option value="safety">Safety Focused</option>
+          </select>
+
+          <button class="btn" onclick="generateCaption()">
+            Generate Description
+          </button>
+
+          <div id="imageStatus" class="small"></div>
+          <div id="imageError" class="error"></div>
+          <div id="imageSuccess" class="success"></div>
+        </div>
+
+        <div>
+          <label>Output</label>
+          <div id="imageOutput" class="output">Result will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: STT -->
+    <div id="tab-stt" class="card hidden">
+      <h2>🎙️ Speech → Text</h2>
+      <div class="row">
+        <div>
+          <label>Upload Audio (wav/mp3)</label>
+          <input type="file" id="audioFile" accept="audio/*" />
+
+          <label style="margin-top: 12px;">Translate to</label>
+          <select id="translateTo">
+            <option value="">None</option>
+            <option value="English">English</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Korean">Korean</option>
+          </select>
+
+          <button class="btn secondary" onclick="transcribeAudio()">
+            Transcribe
+          </button>
+
+          <div id="sttStatus" class="small"></div>
+          <div id="sttError" class="error"></div>
+          <div id="sttSuccess" class="success"></div>
+        </div>
+
+        <div>
+          <label>Transcript</label>
+          <div id="sttOutput" class="output">Transcript will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: TTS -->
+    <div id="tab-tts" class="card hidden">
+      <h2>🗣️ Text → Speech</h2>
+      <div class="row">
+        <div>
+          <label>Enter Text</label>
+          <textarea id="ttsText" placeholder="Type something..."></textarea>
+
+          <button class="btn" onclick="generateSpeech()">
+            Generate Voice
+          </button>
+
+          <div id="ttsStatus" class="small"></div>
+          <div id="ttsError" class="error"></div>
+          <div id="ttsSuccess" class="success"></div>
+        </div>
+
+        <div>
+          <label>Audio Output</label>
+          <audio id="ttsAudio" controls></audio>
+          <div class="small">If audio doesn’t play, try generating again.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function openTab(event, tabId) {
+      const tabs = ["tab-image", "tab-stt", "tab-tts"];
+      tabs.forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(tabId).classList.remove("hidden");
+
+      const buttons = document.querySelectorAll(".tab-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+    }
+
+    function setLoading(elId, isLoading, msg = "") {
+      const el = document.getElementById(elId);
+      if (!el) return;
+
+      if (isLoading) {
+        el.innerHTML = `<span class="loader"></span>${msg}`;
+      } else {
+        el.innerHTML = msg;
+      }
+    }
+
+    async function generateCaption() {
+      const file = document.getElementById("imageFile").files[0];
+      const mode = document.getElementById("imageMode").value;
+
+      document.getElementById("imageError").innerText = "";
+      document.getElementById("imageSuccess").innerText = "";
+      document.getElementById("imageOutput").innerText = "Result will appear here...";
+
+      if (!file) {
+        document.getElementById("imageError").innerText = "❌ Please upload an image.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("mode", mode);
+
+      try {
+        setLoading("imageStatus", true, "Analyzing image...");
+        const res = await fetch("/api/image-caption", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        setLoading("imageStatus", false, "");
+
+        if (data.error) {
+          document.getElementById("imageError").innerText = "❌ " + data.error;
+        } else {
+          document.getElementById("imageOutput").innerText = data.description;
+          document.getElementById("imageSuccess").innerText = "✅ Done!";
+        }
+      } catch (err) {
+        setLoading("imageStatus", false, "");
+        document.getElementById("imageError").innerText = "❌ Backend error. Is Flask running?";
+      }
+    }
+
+    async function transcribeAudio() {
+      const file = document.getElementById("audioFile").files[0];
+
+      document.getElementById("sttError").innerText = "";
+      document.getElementById("sttSuccess").innerText = "";
+      document.getElementById("sttOutput").innerText = "Transcript will appear here...";
+
+      if (!file) {
+        document.getElementById("sttError").innerText = "❌ Please upload an audio file.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("audio", file);
+
+      const translateTo = document.getElementById("translateTo").value;
+      formData.append("translate_to", translateTo);
+
+      try {
+        setLoading("sttStatus", true, "Transcribing audio...");
+        const res = await fetch("/api/speech-to-text", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        setLoading("sttStatus", false, "");
+
+        if (data.error) {
+          document.getElementById("sttError").innerText = "❌ " + data.error;
+        } else {
+          let outputText =
+            `Language: ${data.language}\n\nTranscript:\n${data.transcript}`;
+
+          if (data.translated) {
+            outputText += `\n\nTranslated (${translateTo}):\n${data.translated}`;
+          }
+
+          document.getElementById("sttOutput").innerText = outputText;
+          document.getElementById("sttSuccess").innerText = "✅ Done!";
+        }
+      } catch (err) {
+        setLoading("sttStatus", false, "");
+        document.getElementById("sttError").innerText = "❌ Backend error. Is Flask running?";
+      }
+    }
+
+    async function generateSpeech() {
+      const text = document.getElementById("ttsText").value.trim();
+
+      document.getElementById("ttsError").innerText = "";
+      document.getElementById("ttsSuccess").innerText = "";
+
+      if (!text) {
+        document.getElementById("ttsError").innerText = "❌ Please enter some text.";
+        return;
+      }
+
+      try {
+        setLoading("ttsStatus", true, "Generating speech...");
+        const res = await fetch("/api/text-to-speech", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        setLoading("ttsStatus", false, "");
+
+        if (!res.ok) {
+          const data = await res.json();
+          document.getElementById("ttsError").innerText = "❌ " + (data.error || "TTS failed");
+          return;
+        }
+
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+
+        const audio = document.getElementById("ttsAudio");
+        audio.src = audioUrl;
+        audio.play();
+
+        document.getElementById("ttsSuccess").innerText = "✅ Voice generated!";
+      } catch (err) {
+        setLoading("ttsStatus", false, "");
+        document.getElementById("ttsError").innerText = "❌ Backend error. Is Flask running?";
+      }
+    }
+  </script>
+</body>
+</html>
